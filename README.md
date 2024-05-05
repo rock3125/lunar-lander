@@ -7,3 +7,7 @@ keys: cursor keys for thrust and left and right
 
 ![landed](screenshots/lander1.png "Landed!")
 
+![action](screenshots/lander2.png "and... Action!")
+
+![crashed](screenshots/lander3.png "Game Over")
+
