@@ -5,6 +5,9 @@ keys: cursor keys for thrust and left and right
 [enter] to start
 [esc] to quit
 
+WARNING: keys capture doesn't seem to work well on FireFox, please try Chromium or Chrome.
+
+
 ![landed](screenshots/lander1.png "Landed!")
 
 ![action](screenshots/lander2.png "and... Action!")
