@@ -27,6 +27,8 @@ const explosion_increment = 5;
 
 // game state;  one of {game over, running, landed}
 let game_state = "game over";
+let high_score = 0;
+let previous_high_score = 0;
 
 // landscape and stars
 const num_stars = 100;
@@ -300,6 +302,13 @@ function draw_landscape() {
   fill(50, 50, 50)
   const pos = get_platform_position()
   rect(pos.x + pos.w / 2, pos.y, pos.w, pos.h, 2)
+
+  // draw high score
+  if (game_state !== "running") {
+    textSize(40)
+    fill(180)
+    text("high score " + high_score, 50, 50)
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -371,6 +380,7 @@ function game_logic() {
     reset_stars();
     reset_landscape();
     play_title_track();
+    previous_high_score = high_score;
     game_state = "running";
   }
 
@@ -382,6 +392,9 @@ function game_logic() {
 
     if (has_landed()) {
       game_state = "landed";
+      if (lander.fuel > high_score) {
+        high_score = Math.floor(lander.fuel)
+      }
       lander.r = 0;
       lander.dx = 0;
       lander.dy = 0;
@@ -496,6 +509,10 @@ function draw() {
     if (game_state === "landed") {
       text("CONGRATULATIONS", (w / 2) - 210, (h / 2) - 200)
       text("you made it", (w / 2) - 150, (h / 2) - 160)
+
+      if (high_score > previous_high_score) {
+        text("NEW HIGH SCORE", (w / 2) - 195, (h / 2) - 350)
+      }
 
       draw_lander();
       draw_control_panel();
