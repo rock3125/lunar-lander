@@ -278,6 +278,46 @@ function lander_on_platform() {
       lander_bottom >= y1 && lander_bottom < (y1 + (platform.h * 0.5));
 }
 
+function distance(x1, y1, x2, y2, lx, ly) {
+  // how far is the lander away from the line (px,py) -> (nx,ny)
+  // Coefficients of the line equation
+  let A = y2 - y1;
+  let B = x1 - x2;
+  let C = x2 * y1 - x1 * y2;
+  // Calculating the distance from the point (lx, ly) to the line
+  return Math.abs(A * lx + B * ly + C) / Math.sqrt(A * A + B * B);
+}
+
+// check if the lander has crashed
+function lander_crash() {
+  const lander_bubble = lander_size * 0.5
+
+  // out of side of screen?
+  if (lander.x < lander_bubble || (lander.x + lander_bubble) > w) {
+    return true
+  }
+
+  for (let i = 1; i < (landscape_polygon.length - 2); i++) {
+    const px = landscape_polygon[i - 1].x;
+    const py = landscape_polygon[i - 1].y;
+    const nx = landscape_polygon[i].x;
+    const ny = landscape_polygon[i].y;
+
+    // to close to the terrain?
+    if (lander.x >= px && lander.x < nx) {
+      const segment_width = (nx - px)
+      const percent_left = (lander.x - px) / segment_width
+      const landscape_height = py + (ny - py) * percent_left
+      if (Math.abs(landscape_height - lander.y) < lander_bubble) {
+        console.log(px, py, nx, ny, lander.x, lander.y)
+        return true
+      }
+    }
+
+  }
+  return false;
+}
+
 // check if the lander has landed
 function has_landed() {
   return (lander_safe() && lander_on_platform())
@@ -308,6 +348,10 @@ function game_logic() {
       lander.left_flame_on = false;
       lander.right_flame_on = false;
       lander.main_flame_on = false;
+      return
+    }
+    if (lander_crash()) {
+      game_state = "game over";
       return
     }
 
