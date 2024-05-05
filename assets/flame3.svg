@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16mm"
+   height="24mm"
+   viewBox="0 0 16 24"
+   version="1.1"
+   id="svg783"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="flame3.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview785"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.914906"
+     inkscape:cx="396.21557"
+     inkscape:cy="562.35285"
+     inkscape:window-width="1444"
+     inkscape:window-height="1236"
+     inkscape:window-x="171"
+     inkscape:window-y="459"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs780" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       class="cls-1"
+       d="m 7.9882305,23.487549 c 0,0 -10.0299725,-1.630254 -6.3897353,-10.583274 0,0 -0.4499917,3.482474 1.4701458,3.109605 1.9201374,-0.372868 -2.61120945,-5.348069 0.9291942,-7.8921006 0,0 -0.4499918,2.4420366 1.1229458,2.3630316 2.6418989,-0.132928 -3.1632536,-7.2358184 3.2168679,-9.99470932 0,0 -1.8487747,6.00393212 0.2540217,5.41704082 1.5855094,-0.4422587 0.3061571,-3.0652952 0.3061571,-3.0652952 0,0 3.2494063,1.1077365 0.9491609,5.5177821 -2.3002455,4.4100456 0.6511384,5.1783546 1.8912964,4.0028996 1.240158,-1.175454 0.801629,-2.6903364 0.522094,-2.9620453 -0.279535,-0.271709 3.842863,1.2845563 0.979851,6.1736453 -2.251068,3.845727 1.558887,4.816774 1.799228,0.655864 0,4.74e-4 2.540586,7.474505 -7.0512275,7.257556 z"
+       id="path761"
+       style="fill:#de1f26;stroke-width:0.0393144" />
+  </g>
+</svg>
