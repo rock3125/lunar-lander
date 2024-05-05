@@ -420,6 +420,10 @@ function game_logic() {
     game_state = "running";
   }
 
+  if (keyIsDown(77) || keyIsDown(109)) {
+    music_off()
+  }
+
   if (game_state === "running" && keyIsDown(ESCAPE)) {
     game_state = "game over";
   }
@@ -523,17 +527,29 @@ function game_logic() {
 
 }
 
+function toggle_music() {
+  if (music_on) {
+    music_on = false
+    set_cookie("title_music", "off", 7)
+  } else {
+    music_on = true
+    set_cookie("title_music", "on", 7)
+  }
+}
+
+function music_off() {
+  if (music_on) {
+    music_on = false
+    set_cookie("title_music", "off", 7)
+    stop_title_track()
+  }
+}
+
 // music control on/off
 function mouseClicked() {
   // circle(w - 30, h - 20, 10, 10, 10)
   if (mouseX > w - 35 && mouseX < w - 25 && mouseY > h - 25 && mouseY < h - 15) {
-    if (music_on) {
-      music_on = false
-      set_cookie("title_music", "off", 7)
-    } else {
-      music_on = true
-      set_cookie("title_music", "on", 7)
-    }
+    toggle_music()
   }
 }
 
