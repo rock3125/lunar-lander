@@ -361,6 +361,7 @@ function draw() {
     fill(555)
     textSize(20)
     text("press [enter] to start", (w / 2) - 180, h / 2)
+    text("use cursor keys to move", (w / 2) - 180, (h / 2) + 30)
     draw_landscape();
   }
   game_logic();
