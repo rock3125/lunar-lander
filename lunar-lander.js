@@ -27,8 +27,9 @@ const explosion_increment = 5;
 
 // game state;  one of {game over, running, landed}
 let game_state = "game over";
-let high_score = 0;
-let previous_high_score = 0;
+const hs_cookie = get_cookie("high_score")
+let high_score = parseInt(hs_cookie === "" ? "0" : hs_cookie);
+let previous_high_score = high_score;
 
 // landscape and stars
 const num_stars = 100;
@@ -114,11 +115,15 @@ function setup() {
 function reset_stars() {
   star_scape = [];
   for (i = 0; i < num_stars; i++) {
+    let speed = Math.random() + 0.2;
+    if (Math.random() <= 0.25) {
+      speed = -speed
+    }
     star_scape.push({
       x: getRandomInt(w),
       y: getRandomInt(h),
       s: (getRandomInt(10) + 10),
-      spin_speed: Math.random() + 0.2,
+      spin_speed: speed,
       r: getRandomInt(360)});
   }
 }
@@ -174,7 +179,7 @@ function draw_stars() {
     push();
     translate(star.x, star.y);
     rotate(star.r);
-    const size = (star.s + (star.s * Math.cos((star.r / 180) * pi))) * 0.5
+    const size = (star.s + (star.s * Math.cos((star.r / 180) * pi)))
     image(star_svg, 0, 0, size, size);
     star.r += star.spin_speed
     pop();
@@ -577,6 +582,7 @@ function draw() {
       text("you made it", (w / 2) - 150, (h / 2) - 160)
 
       if (high_score > previous_high_score) {
+        set_cookie("high_score", "" + high_score, 7);
         text("NEW HIGH SCORE", (w / 2) - 195, (h / 2) - 350)
       }
 
@@ -592,6 +598,7 @@ function draw() {
     textSize(20)
     text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
     text("use cursor keys to move", (w / 2) - 180, (h / 2) - 30)
+    text("press [m] to stop music", (w / 2) - 172, (h / 2))
     draw_landscape();
     stop_title_track();
   }
