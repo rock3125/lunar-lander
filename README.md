@@ -1,5 +1,5 @@
 ## Rock's Lunar Lander
-A game written by Rock using `p5.js`.
+A game written by Rock using `p5.js` in 1080p (canvas size 1920 x 1080).
 
 keys: cursor keys for thrust and left and right
 [enter] to start
