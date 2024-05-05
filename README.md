@@ -5,3 +5,5 @@ keys: cursor keys for thrust and left and right
 [enter] to start
 [esc] to quit
 
+![landed](images/lander1.png "Landed!")
+
