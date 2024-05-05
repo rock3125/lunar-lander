@@ -14,11 +14,16 @@ let lander_svg = null;
 let star_svg = null;
 let arrow_svg = null;
 let star_scape = [];
+let explosion_svg = null;
 const flames_svg = [];
 const pi = 3.1415926
 
 // main data structure for vehicle
 let lander = {}
+let explosion_counter = -1;
+const explosion_init_size = 5;
+const max_explosion_size = 200;
+const explosion_increment = 5;
 
 // game state;  one of {game over, running, landed}
 let game_state = "game over";
@@ -58,6 +63,7 @@ function preload(){
   flames_svg.push(loadImage("./assets/flame1.svg"));
   flames_svg.push(loadImage("./assets/flame2.svg"));
   flames_svg.push(loadImage("./assets/flame3.svg"));
+  explosion_svg = loadImage("./assets/explosion.svg")
 }
 
 // helper - return random int
@@ -193,6 +199,27 @@ function draw_control_panel() {
   }
 }
 
+function draw_explosion() {
+  if (explosion_counter < 0)
+    return
+  if (explosion_counter < max_explosion_size) {
+    const half_point = max_explosion_size * 0.5
+    const size = (explosion_counter < half_point) ?
+        explosion_counter :
+        (half_point - (explosion_counter - half_point));
+    explosion_counter += explosion_increment
+    if (explosion_counter < half_point) {
+      draw_lander()
+    }
+    push();
+    translate(lander.x, lander.y);
+    rotate(lander.r);
+    lander.r += 5
+    image(explosion_svg, 0, 0, explosion_init_size + size, explosion_init_size + size);
+    pop()
+  }
+}
+
 // draw our lunar lander with engines etc.
 function draw_lander() {
   if (lander) {
@@ -278,16 +305,6 @@ function lander_on_platform() {
       lander_bottom >= y1 && lander_bottom < (y1 + (platform.h * 0.5));
 }
 
-function distance(x1, y1, x2, y2, lx, ly) {
-  // how far is the lander away from the line (px,py) -> (nx,ny)
-  // Coefficients of the line equation
-  let A = y2 - y1;
-  let B = x1 - x2;
-  let C = x2 * y1 - x1 * y2;
-  // Calculating the distance from the point (lx, ly) to the line
-  return Math.abs(A * lx + B * ly + C) / Math.sqrt(A * A + B * B);
-}
-
 // check if the lander has crashed
 function lander_crash() {
   const lander_bubble = lander_size * 0.5
@@ -352,6 +369,7 @@ function game_logic() {
     }
     if (lander_crash()) {
       game_state = "game over";
+      explosion_counter = 0;
       return
     }
 
@@ -458,6 +476,8 @@ function draw() {
       draw_control_panel();
 
     } else {
+
+      draw_explosion()
       text("G A M E   O V E R", (w / 2) - 200, (h / 2) - 200)
     }
 
