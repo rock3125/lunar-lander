@@ -15,12 +15,13 @@ let star_svg = null;
 let arrow_svg = null;
 let star_scape = [];
 const flames_svg = [];
+const pi = 3.1415926
 
 // main data structure for vehicle
 let lander = {}
 
-// game status
-let started = false;
+// game state;  one of {game over, running, landed}
+let game_state = "game over";
 
 // landscape and stars
 const num_stars = 100;
@@ -32,6 +33,7 @@ let platform_index = 0
 // screen size
 const w = 1920;
 const h = 1080;
+const lander_size = 64
 
 // game constants - like gravity and wind
 const gravity = 0.1;
@@ -82,6 +84,7 @@ function reset_stars() {
       x: getRandomInt(w),
       y: getRandomInt(h),
       s: (getRandomInt(10) + 10),
+      spin_speed: Math.random() + 0.2,
       r: getRandomInt(360)});
   }
 }
@@ -97,7 +100,7 @@ function reset_lander() {
     dy: 0.0,
     // fuel
     fuel: 100.0,
-    fuel_usage: 0.15,
+    fuel_usage: 0.1,
     // flame animation
     main_flame_on: false,
     left_flame_on: false,
@@ -113,7 +116,7 @@ function reset_landscape() {
   platform_index = (num_hills / 4) + getRandomInt(num_hills - (num_hills / 2))
   const width = w / (num_hills + 1)
   for (let i = 0; i < num_hills + 1; i++) {
-    const height = h - (h / 3) + getRandomInt((h / 3))
+    const height = h - ((h / 7) + getRandomInt((h / 5)))
     landscape_polygon.push({x: x, y: height})
     x += width
     if (i === platform_index) {
@@ -137,7 +140,9 @@ function draw_stars() {
     push();
     translate(star.x, star.y);
     rotate(star.r);
-    image(star_svg, 0, 0, star.s, star.s);
+    const size = (star.s + (star.s * Math.cos((star.r / 180) * pi))) * 0.5
+    image(star_svg, 0, 0, size, size);
+    star.r += star.spin_speed
     pop();
   }
 }
@@ -167,9 +172,8 @@ function draw_control_panel() {
   rect(w - ((pw / 2) + 30 + fuel_offset), (ph / 2) - 20, gauge_width *  fuel_multiplier, 10)
 
   // draw safe light
-  const la = (lander.r % 360)
   fill(0)
-  if (lander.dx > -0.4 && lander.dx < 0.4 && lander.dy < 0.5 && la > -5 && la < 5) {
+  if (lander_safe()) {
     fill(20, 200, 20)
   } else {
     fill(200, 20, 20)
@@ -195,29 +199,35 @@ function draw_lander() {
     push();
     translate(lander.x, lander.y);
     rotate(lander.r);
-    image(lander_svg, 0, 0, 64, 64);
+    image(lander_svg, 0, 0, lander_size, lander_size);
 
+    const big_flame_offset = lander_size * 0.625;
+    const big_flame_width = lander_size * 0.25;
+    const big_flame_height = lander_size * 0.375;
     if (lander.main_flame_on) {
       push();
       rotate(180);
-      translate(0, -40);
-      image(flames_svg[lander.flame % flames_svg.length], 0, 0, 16, 24);
+      translate(0, -big_flame_offset);
+      image(flames_svg[lander.flame % flames_svg.length], 0, 0, big_flame_width, big_flame_height);
       pop();
     }
 
+    const little_flame_offset = lander_size * 0.3125;
+    const little_flame_width = lander_size * 0.125;
+    const little_flame_height = lander_size * 0.1875;
     if (lander.right_flame_on) {
       push();
-      translate(-20, -20);
+      translate(-little_flame_offset, -little_flame_offset);
       rotate(-90);
-      image(flames_svg[lander.flame % flames_svg.length], 0, 0, 8, 12);
+      image(flames_svg[lander.flame % flames_svg.length], 0, 0, little_flame_width, little_flame_height);
       pop();
     }
 
     if (lander.left_flame_on) {
       push();
-      translate(20, -20);
+      translate(little_flame_offset, -little_flame_offset);
       rotate(90);
-      image(flames_svg[lander.flame % flames_svg.length], 0, 0, 8, 12);
+      image(flames_svg[lander.flame % flames_svg.length], 0, 0, little_flame_width, little_flame_height);
       pop();
     }
 
@@ -252,19 +262,54 @@ function get_platform_position() {
   return {x: px_1, y: py, w: pw, h: 10}
 }
 
+function lander_safe() {
+  const la = (lander.r % 360)
+  return (lander.dx > -0.4 && lander.dx < 0.4 && lander.dy < 1.0 && la > -5 && la < 5)
+}
+
+// is the lander ont he platform?
+function lander_on_platform() {
+  const platform = get_platform_position()
+  const x1 = platform.x - (platform.w / 10)
+  const x2 = platform.x + platform.w + (platform.w / 10)
+  const y1 = platform.y
+  const lander_bottom = lander.y + (lander_size * 0.5);
+  return lander.x > x1 && lander.x < x2 &&
+      lander_bottom >= y1 && lander_bottom < (y1 + (platform.h * 0.5));
+}
+
+// check if the lander has landed
+function has_landed() {
+  return (lander_safe() && lander_on_platform())
+}
+
 // Player Move, Rocket force against gavity & fuel consumption
 function game_logic() {
-  if (!started && keyIsDown(ENTER)) {
+  if (game_state !== "running" && keyIsDown(ENTER)) {
     reset_lander();
     reset_stars();
     reset_landscape();
-    started = true;
-  }
-  if (started && keyIsDown(ESCAPE)) {
-    started = false;
+    game_state = "running";
   }
 
-  if (started) {
+  if (game_state === "running" && keyIsDown(ESCAPE)) {
+    game_state = "game over";
+  }
+
+  if (game_state === "running") {
+
+    if (has_landed()) {
+      game_state = "landed";
+      lander.r = 0;
+      lander.dx = 0;
+      lander.dy = 0;
+      const platform = get_platform_position()
+      lander.y = platform.y - (lander_size * 0.5 + platform.h * 0.5);
+      lander.left_flame_on = false;
+      lander.right_flame_on = false;
+      lander.main_flame_on = false;
+      return
+    }
 
     lander.main_flame_on = false;
     lander.left_flame_on = false;
@@ -273,13 +318,13 @@ function game_logic() {
     if (lander.fuel > 0.0 && (keyIsDown(UP_ARROW) || keyIsDown(DOWN_ARROW))) {
       lander.main_flame_on = true;
 
-      lander.dy -= ((gravity * 0.5) * Math.cos((lander.r / 180) * 3.14159265));
+      lander.dy -= ((gravity * 0.7) * Math.cos((lander.r / 180) * pi));
       if (lander.dy < -0.5)
         lander.dy = -0.5;
       if (lander.dy > max_gravity)
         lander.dy = max_gravity;
 
-      lander.dx += (0.1 * Math.sin((lander.r / 180) * 3.14159265));
+      lander.dx += (0.1 * Math.sin((lander.r / 180) * pi));
       if (lander.dx < -max_horizontal)
         lander.dx = -max_horizontal;
       if (lander.dx > max_horizontal)
@@ -349,7 +394,7 @@ function draw() {
   stroke(255)
   draw_stars();
 
-  if (started) {
+  if (game_state === "running") {
     draw_lander();
     draw_control_panel();
     draw_landscape();
@@ -357,11 +402,24 @@ function draw() {
   } else {
     fill(444)
     textSize(20)
-    text("Rock's lunar lander v1.0", (w / 2) - 200, (h / 2) - 100)
+    text("Rock's lunar lander v1.0", (w / 2) - 180, (h / 2) - 100)
     fill(555)
+
+    textSize(30)
+    if (game_state === "landed") {
+      text("CONGRATULATIONS", (w / 2) - 210, (h / 2) - 200)
+      text("you made it", (w / 2) - 150, (h / 2) - 160)
+
+      draw_lander();
+      draw_control_panel();
+
+    } else {
+      text("G A M E   O V E R", (w / 2) - 200, (h / 2) - 200)
+    }
+
     textSize(20)
-    text("press [enter] to start", (w / 2) - 180, h / 2)
-    text("use cursor keys to move", (w / 2) - 180, (h / 2) + 30)
+    text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
+    text("use cursor keys to move", (w / 2) - 180, (h / 2) - 30)
     draw_landscape();
   }
   game_logic();
