@@ -52,8 +52,33 @@ let wind_height_adjust = 1.0
 let wind_direction = -1
 let wind_counter = 0
 
+// audio
+let title_track = null;
+
 /////////////////////////////////////////////////////////////////////////////////////
 // set up
+
+function play_title_track() {
+  if (!title_track) {
+    title_track = new Audio('./music/little-tune.mp3'); 
+    if (typeof title_track.loop == 'boolean') {
+        title_track.loop = true;
+    } else {
+        title_track.addEventListener('ended', function() {
+            this.currentTime = 0;
+            this.play();
+        }, false);
+    }
+    title_track.play();
+  }
+}
+
+function stop_title_track() {
+  if (title_track) {
+    title_track.pause();
+    title_track = null;
+  }
+}
 
 // p5.js callback: load all graphics and set up
 function preload(){
@@ -326,7 +351,6 @@ function lander_crash() {
       const percent_left = (lander.x - px) / segment_width
       const landscape_height = py + (ny - py) * percent_left
       if (Math.abs(landscape_height - lander.y) < lander_bubble) {
-        console.log(px, py, nx, ny, lander.x, lander.y)
         return true
       }
     }
@@ -346,6 +370,7 @@ function game_logic() {
     reset_lander();
     reset_stars();
     reset_landscape();
+    play_title_track();
     game_state = "running";
   }
 
@@ -485,7 +510,8 @@ function draw() {
     text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
     text("use cursor keys to move", (w / 2) - 180, (h / 2) - 30)
     draw_landscape();
+
+    stop_title_track();
   }
   game_logic();
 }
-
