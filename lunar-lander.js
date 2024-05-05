@@ -56,12 +56,13 @@ let wind_counter = 0
 
 // audio
 let title_track = null;
+let music_on = get_cookie("title_music") === "" || get_cookie("title_music") === "on";
 
 /////////////////////////////////////////////////////////////////////////////////////
 // set up
 
 function play_title_track() {
-  if (!title_track) {
+  if (!title_track && music_on) {
     title_track = new Audio('./music/little-tune.mp3'); 
     if (typeof title_track.loop == 'boolean') {
         title_track.loop = true;
@@ -78,8 +79,8 @@ function play_title_track() {
 function stop_title_track() {
   if (title_track) {
     title_track.pause();
-    title_track = null;
   }
+  title_track = null;
 }
 
 // p5.js callback: load all graphics and set up
@@ -178,6 +179,18 @@ function draw_stars() {
     star.r += star.spin_speed
     pop();
   }
+}
+
+function draw_music_control() {
+  stroke(20)
+  if (music_on)
+    fill(255)
+  else
+    fill(0)
+  rect(w - 30, h - 20, 10, 10, 10)
+  textSize(10)
+  fill(255)
+  text("music", w - 70, h - 18)
 }
 
 // draw the game control panel showing where it is at
@@ -313,6 +326,29 @@ function draw_landscape() {
 
 /////////////////////////////////////////////////////////////////////////////////////
 // main logic and draw
+
+function get_cookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+function set_cookie(cname, cvalue, ex_days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (ex_days*24*60*60*1000));
+  let expires = "expires="+ d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
 
 // get the position of the platform on the map
 function get_platform_position() {
@@ -487,6 +523,20 @@ function game_logic() {
 
 }
 
+// music control on/off
+function mouseClicked() {
+  // circle(w - 30, h - 20, 10, 10, 10)
+  if (mouseX > w - 35 && mouseX < w - 25 && mouseY > h - 25 && mouseY < h - 15) {
+    if (music_on) {
+      music_on = false
+      set_cookie("title_music", "off", 7)
+    } else {
+      music_on = true
+      set_cookie("title_music", "on", 7)
+    }
+  }
+}
+
 // p5 js callback - draw the world
 function draw() {
   background(0);
@@ -527,8 +577,10 @@ function draw() {
     text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
     text("use cursor keys to move", (w / 2) - 180, (h / 2) - 30)
     draw_landscape();
-
     stop_title_track();
   }
+
+  draw_music_control();
   game_logic();
+
 }
