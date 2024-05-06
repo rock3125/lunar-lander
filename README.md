@@ -5,7 +5,7 @@ keys: cursor keys for thrust and left and right
 [enter] to start
 [esc] to quit
 
-WARNING: keys capture doesn't seem to work well on FireFox, please try Chromium or Chrome.
+try it online [Rock's Lunar Lander for the web](https://rockdev.ai/lunar-lander)
 
 
 ![landed](screenshots/lander1.png "Landed!")
