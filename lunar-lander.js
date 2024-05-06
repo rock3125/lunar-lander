@@ -309,7 +309,7 @@ function draw_lander() {
 
 // draw the mountainous landscape
 function draw_landscape() {
-  color(81,43,27)
+  stroke(61,23,7)
   fill(81,43,27);
   beginShape();
   for (const v of landscape_polygon) {
@@ -317,6 +317,7 @@ function draw_landscape() {
   }
   endShape(CLOSE);
 
+  stroke(255)
   fill(50, 50, 50)
   const pos = get_platform_position()
   rect(pos.x + pos.w / 2, pos.y, pos.w, pos.h, 2)
