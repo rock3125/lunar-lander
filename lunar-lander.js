@@ -38,13 +38,14 @@ let landscape_polygon = [];
 let platform_index = 0
 
 // screen size
-const margin = 4;
+const margin = 4; // leave some space between the canvas and right bottom of the screen
 let w = window.innerWidth - margin;
 let h = window.innerHeight - margin;
 const lander_size = 64
 
-// number of stars in the sky
-let num_stars = w / 25;
+// number of stars in the sky depend on the volume of the sky
+// 100 stars @ 1920 x 1080
+let num_stars = Math.max(Math.floor((w * h) / 20736), 20);
 
 // game constants - like gravity and wind
 const gravity = 0.1;
