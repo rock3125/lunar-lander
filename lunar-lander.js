@@ -34,18 +34,25 @@ let previous_high_score = high_score;
 // landscape
 const num_hills = 20;
 let landscape_polygon = [];
+let current_w = 0; // set by landscape creator to w and h
+let current_h = 0;
 // where the platform is located inside the landscape (offset into landscape_polygon)
 let platform_index = 0
 
 // screen size
-const margin = 4; // leave some space between the canvas and right bottom of the screen
+const margin = 5; // leave some space between the canvas and right bottom of the screen
 let w = window.innerWidth - margin;
 let h = window.innerHeight - margin;
-const lander_size = 64
+// 64 @ 1920 width
+const lander_min_size = 32
+const lander_scalar = 30;
+let lander_size = Math.max(lander_min_size, Math.floor(w / lander_scalar));
 
 // number of stars in the sky depend on the volume of the sky
 // 100 stars @ 1920 x 1080
 let num_stars = Math.max(Math.floor((w * h) / 20736), 20);
+const star_scalar = 1500; // width to star size adjustment
+let star_size = w / star_scalar;
 
 // game constants - like gravity and wind
 const gravity = 0.1;
@@ -157,6 +164,8 @@ function reset_lander() {
 // create a new landscape to land in
 function reset_landscape() {
   landscape_polygon = [];
+  current_w = w;
+  current_h = h;
   let x = 0;
   platform_index = (num_hills / 4) + getRandomInt(num_hills - (num_hills / 2))
   const width = w / (num_hills + 1)
@@ -175,12 +184,34 @@ function reset_landscape() {
   landscape_polygon.push({x: 0, y: landscape_polygon[0].y})
 }
 
+// resize an existing landscape
+function resize_landscape() {
+  if (current_w > 0 && current_h > 0) {
+    const w_adj = w / current_w;
+    const h_adj = h / current_h;
+
+    const new_landscape_polygon = [];
+    for (let lp of landscape_polygon) {
+      const nx = lp.x * w_adj
+      const ny = lp.y * h_adj
+      new_landscape_polygon.push({x: nx, y: ny})
+    }
+    landscape_polygon = new_landscape_polygon;
+
+    current_w = w;
+    current_h = h;
+  }
+}
+
 window.addEventListener('resize', function() {windowResized()}, true);
 
 function windowResized() {
   w = window.innerWidth - margin;
   h = window.innerHeight - margin;
   resizeCanvas(w, h);
+  resize_landscape();
+  lander_size = Math.max(lander_min_size, Math.floor(w / lander_scalar));
+  star_size = w / star_scalar;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +224,7 @@ function draw_stars() {
     push();
     translate(star.x * w, star.y * h);
     rotate(star.r);
-    const size = (star.s + (star.s * Math.cos((star.r / 180) * pi)))
+    const size = (star.s + (star.s * Math.cos((star.r / 180) * pi))) * star_size;
     image(star_svg, 0, 0, size, size);
     star.r += star.spin_speed
     pop();
