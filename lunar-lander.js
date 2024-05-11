@@ -31,17 +31,20 @@ const hs_cookie = get_cookie("high_score")
 let high_score = parseInt(hs_cookie === "" ? "0" : hs_cookie);
 let previous_high_score = high_score;
 
-// landscape and stars
-const num_stars = 100;
+// landscape
 const num_hills = 20;
 let landscape_polygon = [];
 // where the platform is located inside the landscape (offset into landscape_polygon)
 let platform_index = 0
 
 // screen size
-const w = 1920;
-const h = 1080;
+const margin = 4;
+let w = window.innerWidth - margin;
+let h = window.innerHeight - margin;
 const lander_size = 64
+
+// number of stars in the sky
+let num_stars = w / 25;
 
 // game constants - like gravity and wind
 const gravity = 0.1;
@@ -121,11 +124,12 @@ function reset_stars() {
       speed = -speed
     }
     star_scape.push({
-      x: getRandomInt(w),
-      y: getRandomInt(h),
-      s: (getRandomInt(10) + 10),
+      x: Math.random(),
+      y: Math.random(),
+      s: (getRandomInt(10) + 10), // scale
       spin_speed: speed,
-      r: getRandomInt(360)});
+      r: getRandomInt(360) // initial rotation
+    });
   }
 }
 
@@ -170,6 +174,14 @@ function reset_landscape() {
   landscape_polygon.push({x: 0, y: landscape_polygon[0].y})
 }
 
+window.addEventListener('resize', function() {windowResized()}, true);
+
+function windowResized() {
+  w = window.innerWidth - margin;
+  h = window.innerHeight - margin;
+  resizeCanvas(w, h);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // draw
 
@@ -178,7 +190,7 @@ function draw_stars() {
   for (i = 0; i < num_stars; i++) {
     const star = star_scape[i];
     push();
-    translate(star.x, star.y);
+    translate(star.x * w, star.y * h);
     rotate(star.r);
     const size = (star.s + (star.s * Math.cos((star.r / 180) * pi)))
     image(star_svg, 0, 0, size, size);
