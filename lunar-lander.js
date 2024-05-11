@@ -73,6 +73,8 @@ function play_title_track() {
             this.play();
         }, false);
     }
+  }
+  if (title_track && music_on) {
     title_track.play();
   }
 }
@@ -81,7 +83,6 @@ function stop_title_track() {
   if (title_track) {
     title_track.pause();
   }
-  title_track = null;
 }
 
 // p5.js callback: load all graphics and set up
