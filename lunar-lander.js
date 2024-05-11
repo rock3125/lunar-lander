@@ -214,6 +214,17 @@ function windowResized() {
   star_size = w / star_scalar;
 }
 
+function get_lander_xy() {
+  if (current_w > 0 && current_h > 0) {
+
+    const w_adj = w / current_w;
+    const h_adj = h / current_h;
+
+    return {x: lander.x * w_adj, y: lander.y * h_adj}
+  }
+  return {x: lander.x, y: lander.y}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // draw
 
@@ -302,7 +313,8 @@ function draw_explosion() {
       draw_lander()
     }
     push();
-    translate(lander.x, lander.y);
+    const lxy= get_lander_xy()
+    translate(lxy.x, lxy.y);
     rotate(lander.r);
     lander.r += 5
     image(explosion_svg, 0, 0, explosion_init_size + size, explosion_init_size + size);
@@ -314,7 +326,8 @@ function draw_explosion() {
 function draw_lander() {
   if (lander) {
     push();
-    translate(lander.x, lander.y);
+    const lxy= get_lander_xy()
+    translate(lxy.x, lxy.y);
     rotate(lander.r);
     image(lander_svg, 0, 0, lander_size, lander_size);
 
@@ -417,12 +430,13 @@ function lander_safe() {
 
 // is the lander ont he platform?
 function lander_on_platform() {
+  const lxy= get_lander_xy()
   const platform = get_platform_position()
   const x1 = platform.x - (platform.w / 10)
   const x2 = platform.x + platform.w + (platform.w / 10)
   const y1 = platform.y
-  const lander_bottom = lander.y + (lander_size * 0.5);
-  return lander.x > x1 && lander.x < x2 &&
+  const lander_bottom = lxy.y + (lander_size * 0.5);
+  return lxy.x > x1 && lxy.x < x2 &&
       lander_bottom >= y1 && lander_bottom < (y1 + (platform.h * 0.5));
 }
 
@@ -431,7 +445,8 @@ function lander_crash() {
   const lander_bubble = lander_size * 0.5
 
   // out of side of screen?
-  if (lander.x < lander_bubble || (lander.x + lander_bubble) > w) {
+  const lxy = get_lander_xy();
+  if (lxy.x < lander_bubble || (lxy.x + lander_bubble) > w) {
     return true
   }
 
@@ -442,11 +457,11 @@ function lander_crash() {
     const ny = landscape_polygon[i].y;
 
     // to close to the terrain?
-    if (lander.x >= px && lander.x < nx) {
+    if (lxy.x >= px && lxy.x < nx) {
       const segment_width = (nx - px)
-      const percent_left = (lander.x - px) / segment_width
+      const percent_left = (lxy.x - px) / segment_width
       const landscape_height = py + (ny - py) * percent_left
-      if (Math.abs(landscape_height - lander.y) < lander_bubble) {
+      if (Math.abs(landscape_height - lxy.y) < lander_bubble) {
         return true
       }
     }
