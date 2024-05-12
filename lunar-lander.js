@@ -69,6 +69,7 @@ let wind_counter = 0
 // audio
 let title_track = null;
 let music_on = get_cookie("title_music") === "" || get_cookie("title_music") === "on";
+let music_down = 0; // music key down count
 
 /////////////////////////////////////////////////////////////////////////////////////
 // set up
@@ -486,8 +487,12 @@ function game_logic() {
     game_state = "running";
   }
 
-  if (keyIsDown(77) || keyIsDown(109)) {
-    music_off()
+  // m or M to toggle music
+  if ((keyIsDown(77) || keyIsDown(109)) && music_down === 0) {
+    music_down = 15
+    toggle_music()
+  } else if (music_down > 0) {
+    music_down -= 1
   }
 
   if (game_state === "running" && keyIsDown(ESCAPE)) {
@@ -521,7 +526,7 @@ function game_logic() {
     lander.left_flame_on = false;
     lander.right_flame_on = false;
 
-    if (lander.fuel > 0.0 && (keyIsDown(UP_ARROW) || keyIsDown(DOWN_ARROW))) {
+    if (lander.fuel > 0.0 && (keyIsDown(UP_ARROW) || keyIsDown(DOWN_ARROW) || keyIsDown(32))) {
       lander.main_flame_on = true;
 
       lander.dy -= ((gravity * 0.7) * Math.cos((lander.r / 180) * pi));
@@ -597,17 +602,11 @@ function toggle_music() {
   if (music_on) {
     music_on = false
     set_cookie("title_music", "off", 7)
+    if (title_track) title_track.pause();
   } else {
     music_on = true
     set_cookie("title_music", "on", 7)
-  }
-}
-
-function music_off() {
-  if (music_on) {
-    music_on = false
-    set_cookie("title_music", "off", 7)
-    stop_title_track()
+    if (title_track) title_track.play();
   }
 }
 
@@ -658,8 +657,8 @@ function draw() {
 
     textSize(20)
     text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
-    text("use cursor keys to move", (w / 2) - 180, (h / 2) - 30)
-    text("press [m] to stop music", (w / 2) - 172, (h / 2))
+    text("use cursor keys and space to move", (w / 2) - 220, (h / 2) - 30)
+    text("press [m] to toggle music", (w / 2) - 172, (h / 2))
     draw_landscape();
     stop_title_track();
   }
