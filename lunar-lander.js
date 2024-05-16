@@ -630,10 +630,11 @@ function draw() {
     draw_control_panel();
     draw_landscape();
 
-    if (lander_safe()) {
-      fill(20,100,20);
+    if (lander_safe() && lander.y > h * 0.5) {
+      fill(20,150,20);
+      stroke(20,150,20);
       textSize(10);
-      text("safe for landing", (w / 2) - 100, 20);
+      text("safe for landing", (w / 2) - 100, 40);
     }
 
   } else {
