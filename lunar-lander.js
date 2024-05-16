@@ -436,7 +436,7 @@ function lander_on_platform() {
   const x1 = platform.x - (platform.w / 10)
   const x2 = platform.x + platform.w + (platform.w / 10)
   const y1 = platform.y
-  const lander_bottom = lxy.y + (lander_size * 0.5);
+  const lander_bottom = lxy.y + (lander_size * 0.65);
   return lxy.x > x1 && lxy.x < x2 &&
       lander_bottom >= y1 && lander_bottom < (y1 + (platform.h * 0.5));
 }
@@ -629,6 +629,12 @@ function draw() {
     draw_lander();
     draw_control_panel();
     draw_landscape();
+
+    if (lander_safe()) {
+      fill(20,100,20);
+      textSize(10);
+      text("safe for landing", (w / 2) - 100, 20);
+    }
 
   } else {
     fill(444)
