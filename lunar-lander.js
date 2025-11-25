@@ -76,7 +76,7 @@ let music_down = 0; // music key down count
 
 function play_title_track() {
   if (!title_track && music_on) {
-    title_track = new Audio('./music/little-tune.mp3'); 
+    title_track = new Audio('./music/cossacks-rode-through-the-steppe-trough-the-valley.mp3'); 
     if (typeof title_track.loop == 'boolean') {
         title_track.loop = true;
     } else {
