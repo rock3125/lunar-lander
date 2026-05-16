@@ -14,7 +14,6 @@ let lander_svg = null;
 let star_svg = null;
 let arrow_svg = null;
 let star_scape = [];
-let explosion_svg = null;
 const flames_svg = [];
 const pi = 3.1415926
 
@@ -105,7 +104,6 @@ function preload(){
   flames_svg.push(loadImage("./assets/flame1.svg"));
   flames_svg.push(loadImage("./assets/flame2.svg"));
   flames_svg.push(loadImage("./assets/flame3.svg"));
-  explosion_svg = loadImage("./assets/explosion.svg")
 }
 
 // helper - return random int
