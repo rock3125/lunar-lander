@@ -259,48 +259,45 @@ function draw_music_control() {
 
 // draw the game control panel showing where it is at
 function draw_control_panel() {
-  // panel width and height
-  const pw = 280
-  const ph = 130
-  const gauge_width = 140
-  // grey panel color
-  fill(100, 100, 100)
-  rect(w - ((pw / 2) + 10), (ph / 2) + 10, pw, ph, 10)
-  fill(255)
-  // draw text
-  textSize(14)
-  text("fuel", w - pw, ph - 80)
-  text("safe", w - pw, ph - 50)
-  text("wind", w - pw, ph - 20)
+  push();
+  const gauge_width = 140;
+
+  fill(255);
+  noStroke();
+  textSize(14);
+  textAlign(LEFT);
+
+  const base_x = 50;
+  const base_y = h - 30;
+
+  // score text (using current fuel as score)
+  text("score " + Math.max(0, Math.floor(lander.fuel)), base_x, base_y - 20);
+
+  // fuel text
+  text("fuel", base_x, base_y);
 
   // draw fuel gauge
-  const fuel_multiplier = (lander.fuel / 100)
-  const fuel_offset = (gauge_width * (1 - fuel_multiplier)) * 0.5
-  fill(255, 0, 0)
-  rect(w - ((pw / 2) + 30), (ph / 2) - 20, gauge_width, 10)
-  fill(20, 20, 200)
-  rect(w - ((pw / 2) + 30 + fuel_offset), (ph / 2) - 20, gauge_width *  fuel_multiplier, 10)
+  const fuel_multiplier = Math.max(0, (lander.fuel / 100));
+  const fuel_offset = (gauge_width * (1 - fuel_multiplier)) * 0.5;
+  const gauge_x = base_x + 50;
+  const gauge_y = base_y - 5;
+  
+  fill(255, 0, 0);
+  rect(gauge_x + gauge_width / 2, gauge_y, gauge_width, 10);
+  fill(20, 20, 200);
+  rect(gauge_x + gauge_width / 2 - fuel_offset, gauge_y, gauge_width * fuel_multiplier, 10);
 
   // draw safe light
-  fill(0)
+  fill(255);
+  text("safe", gauge_x + gauge_width + 40, base_y);
+  fill(0);
   if (lander_safe()) {
-    fill(20, 200, 20)
+    fill(20, 200, 20);
   } else {
-    fill(200, 20, 20)
+    fill(200, 20, 20);
   }
-  circle(w - ((pw / 2) + 90), (ph / 2) + 10, 15)
-
-  // draw the wind speed
-  const wind_size = Math.abs(wind_strength * 10 * wind_height_adjust);
-  if (wind_size > 0) {
-    push()
-    translate(w - ((pw / 2) + 70), (ph / 2) + 40)
-    if (wind_direction < 0) {
-      rotate(180)
-    }
-    image(arrow_svg, 0, 0, 10 + wind_size, 20)
-    pop()
-  }
+  circle(gauge_x + gauge_width + 85, gauge_y, 15);
+  pop();
 }
 
 let explosion_particles = [];
@@ -801,11 +798,11 @@ function draw() {
   rectMode(CENTER);
   stroke(255)
   draw_stars();
+  draw_landscape();
 
   if (game_state === "running") {
     draw_lander();
     draw_control_panel();
-    draw_landscape();
 
     if (lander_safe() && lander.y > h * 0.5) {
       fill(20,150,20);
@@ -845,7 +842,6 @@ function draw() {
     text("press [enter] or tap to start", (w / 2) - 160, h / 2 - 60)
     text("use cursor keys and space to move", (w / 2) - 220, (h / 2) - 30)
     text("press [m] to toggle music", (w / 2) - 172, (h / 2))
-    draw_landscape();
     stop_title_track();
   }
 
