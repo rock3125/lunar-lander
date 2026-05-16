@@ -234,6 +234,10 @@ function draw_stars() {
   for (i = 0; i < num_stars; i++) {
     const star = star_scape[i];
     push();
+    // make stars twinkle slightly based on their rotation
+    let alpha = 150 + (105 * Math.sin(star.r * pi / 180));
+    tint(255, alpha);
+    
     translate(star.x * w, star.y * h);
     rotate(star.r);
     const size = (star.s + (star.s * Math.cos((star.r / 180) * pi))) * star_size;
@@ -301,25 +305,91 @@ function draw_control_panel() {
   }
 }
 
+let explosion_particles = [];
+let audioCtx = null;
+
+function play_explosion_sound() {
+  if (!music_on) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  
+  const bufferSize = audioCtx.sampleRate * 2; 
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.5);
+  
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(1, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+  
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  noise.start();
+}
+
 function draw_explosion() {
-  if (explosion_counter < 0)
-    return
-  if (explosion_counter < max_explosion_size) {
-    const half_point = max_explosion_size * 0.5
-    const size = (explosion_counter < half_point) ?
-        explosion_counter :
-        (half_point - (explosion_counter - half_point));
-    explosion_counter += explosion_increment
-    if (explosion_counter < half_point) {
-      draw_lander()
+  if (explosion_counter < 0) return;
+
+  if (explosion_counter === 0) {
+    play_explosion_sound();
+    explosion_particles = [];
+    const lxy = get_lander_xy();
+    for (let i = 0; i < 200; i++) {
+      let is_shrapnel = Math.random() > 0.8;
+      explosion_particles.push({
+        x: lxy.x,
+        y: lxy.y,
+        vx: (Math.random() - 0.5) * (is_shrapnel ? 25 : 15),
+        vy: (Math.random() - 0.5) * (is_shrapnel ? 25 : 15),
+        life: 1.0 + Math.random(),
+        size: Math.random() * 8 + 4,
+        color: is_shrapnel ? [200, 200, 200] : (Math.random() > 0.5 ? [255, 100 + Math.random() * 100, 0] : [200, 50, 0]),
+        type: is_shrapnel ? 'shrapnel' : 'fire'
+      });
     }
+  }
+
+  if (explosion_counter < max_explosion_size) {
+    explosion_counter += explosion_increment;
+    
     push();
-    const lxy= get_lander_xy()
-    translate(lxy.x, lxy.y);
-    rotate(lander.r);
-    lander.r += 5
-    image(explosion_svg, 0, 0, explosion_init_size + size, explosion_init_size + size);
-    pop()
+    noStroke();
+    drawingContext.shadowBlur = 15;
+    for (let p of explosion_particles) {
+      if (p.life > 0) {
+        if (p.type === 'fire') {
+          drawingContext.shadowColor = '#FF5500';
+          fill(p.color[0], p.color[1], p.color[2], p.life * 150);
+          circle(p.x, p.y, p.size * p.life);
+        } else {
+          drawingContext.shadowColor = '#FFFFFF';
+          fill(p.color[0], p.color[1], p.color[2], p.life * 255);
+          rect(p.x, p.y, p.size * p.life * 0.5, p.size * p.life * 2);
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += gravity * 1.5; // Add gravity
+        p.life -= 0.04;
+      }
+    }
+    pop();
   }
 }
 
@@ -339,6 +409,8 @@ function draw_lander() {
       push();
       rotate(180);
       translate(0, -big_flame_offset);
+      drawingContext.shadowBlur = 10;
+      drawingContext.shadowColor = '#FFAA00';
       image(flames_svg[lander.flame % flames_svg.length], 0, 0, big_flame_width, big_flame_height);
       pop();
     }
@@ -368,18 +440,31 @@ function draw_lander() {
 
 // draw the mountainous landscape
 function draw_landscape() {
-  stroke(61,23,7)
-  fill(81,43,27);
+  push();
+  let grad = drawingContext.createLinearGradient(0, h/2, 0, h);
+  grad.addColorStop(0, '#555566'); 
+  grad.addColorStop(1, '#11111a'); 
+  
+  drawingContext.fillStyle = grad;
+  stroke(180, 180, 200);
+  strokeWeight(2);
+  
   beginShape();
   for (const v of landscape_polygon) {
     vertex(v.x, v.y);
   }
   endShape(CLOSE);
+  pop();
 
-  stroke(255)
-  fill(50, 50, 50)
-  const pos = get_platform_position()
-  rect(pos.x + pos.w / 2, pos.y, pos.w, pos.h, 2)
+  push();
+  stroke(0, 255, 100);
+  fill(0, 50, 20);
+  const pos = get_platform_position();
+  drawingContext.shadowBlur = 15;
+  drawingContext.shadowColor = '#00FF66';
+  // Note: the original rect was using CENTER mode earlier, so we offset pos.x + pos.w / 2
+  rect(pos.x + pos.w / 2, pos.y, pos.w, pos.h, 2);
+  pop();
 
   // draw high score
   if (game_state !== "running") {
@@ -425,8 +510,10 @@ function get_platform_position() {
 }
 
 function lander_safe() {
-  const la = (lander.r % 360)
-  return (lander.dx > -0.4 && lander.dx < 0.4 && lander.dy < 1.0 && la > -5 && la < 5)
+  let la = (lander.r % 360);
+  if (la > 180) la -= 360;
+  if (la < -180) la += 360;
+  return (lander.dx > -1.5 && lander.dx < 1.5 && lander.dy < 2.5 && la > -20 && la < 20)
 }
 
 // is the lander ont he platform?
@@ -476,9 +563,49 @@ function has_landed() {
   return (lander_safe() && lander_on_platform())
 }
 
+// Virtual controls state
+let touch_left = false;
+let touch_right = false;
+let touch_thrust = false;
+let touch_start = false;
+
+function update_touches() {
+  touch_left = false;
+  touch_right = false;
+  touch_thrust = false;
+  touch_start = false;
+  
+  for (let i = 0; i < touches.length; i++) {
+    let tx = touches[i].x;
+    let ty = touches[i].y;
+    
+    // Ignore touches on music button roughly
+    if (tx > w - 50 && ty > h - 50) continue;
+
+    if (game_state !== "running") {
+      touch_start = true;
+    } else {
+      // Thrust: right side of the screen
+      if (tx > w * 0.6) {
+        touch_thrust = true;
+      }
+      // Rotate left: bottom left
+      else if (tx < w * 0.3) {
+        touch_left = true;
+      }
+      // Rotate right: bottom middle-left
+      else if (tx >= w * 0.3 && tx < w * 0.6) {
+        touch_right = true;
+      }
+    }
+  }
+}
+
 // Player Move, Rocket force against gavity & fuel consumption
 function game_logic() {
-  if (game_state !== "running" && keyIsDown(ENTER)) {
+  update_touches();
+
+  if (game_state !== "running" && (keyIsDown(ENTER) || touch_start)) {
     reset_lander();
     reset_stars();
     reset_landscape();
@@ -526,7 +653,7 @@ function game_logic() {
     lander.left_flame_on = false;
     lander.right_flame_on = false;
 
-    if (lander.fuel > 0.0 && (keyIsDown(UP_ARROW) || keyIsDown(DOWN_ARROW) || keyIsDown(32))) {
+    if (lander.fuel > 0.0 && (keyIsDown(UP_ARROW) || keyIsDown(DOWN_ARROW) || keyIsDown(32) || touch_thrust)) {
       lander.main_flame_on = true;
 
       lander.dy -= ((gravity * 0.7) * Math.cos((lander.r / 180) * pi));
@@ -541,12 +668,12 @@ function game_logic() {
       if (lander.dx > max_horizontal)
         lander.dx = max_horizontal;
     }
-    if (keyIsDown(LEFT_ARROW)) {
-      lander.r -= 1.0
+    if (keyIsDown(LEFT_ARROW) || touch_left) {
+      lander.r -= 2.0; // make rotation a bit faster for better control
       lander.left_flame_on = true;
     }
-    if (keyIsDown(RIGHT_ARROW)) {
-      lander.r += 1.0
+    if (keyIsDown(RIGHT_ARROW) || touch_right) {
+      lander.r += 2.0; // make rotation a bit faster for better control
       lander.right_flame_on = true;
     }
     if (lander.main_flame_on || lander.right_flame_on || lander.left_flame_on) {
@@ -612,10 +739,59 @@ function toggle_music() {
 
 // music control on/off
 function mouseClicked() {
-  // circle(w - 30, h - 20, 10, 10, 10)
-  if (mouseX > w - 35 && mouseX < w - 25 && mouseY > h - 25 && mouseY < h - 15) {
-    toggle_music()
+  if (mouseX > w - 80 && mouseY > h - 40) {
+    toggle_music();
   }
+}
+
+// Prevent default touch behavior
+function touchStarted() {
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+  // Allow music toggle via touch
+  if (touches.length > 0) {
+    let tx = touches[touches.length-1].x;
+    let ty = touches[touches.length-1].y;
+    if (tx > w - 80 && ty > h - 40) {
+      toggle_music();
+      return false;
+    }
+  }
+  return false;
+}
+function touchMoved() { return false; }
+function touchEnded() { return false; }
+
+function draw_virtual_controls() {
+  if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
+  if (game_state !== "running") return;
+
+  push();
+  noStroke();
+  
+  // Left area (Rotate Left)
+  fill(255, 255, 255, touch_left ? 60 : 30);
+  rectMode(CORNER);
+  rect(0, h * 0.5, w * 0.3, h * 0.5, 20);
+  
+  // Right area (Rotate Right)
+  fill(255, 255, 255, touch_right ? 60 : 30);
+  rect(w * 0.3, h * 0.5, w * 0.3, h * 0.5, 20);
+  
+  // Thrust area
+  fill(255, 255, 255, touch_thrust ? 60 : 30);
+  rect(w * 0.6, h * 0.5, w * 0.4, h * 0.5, 20);
+
+  // Labels
+  fill(255, 255, 255, 150);
+  textAlign(CENTER, CENTER);
+  textSize(Math.min(w * 0.05, 30));
+  text("< ROT", w * 0.15, h * 0.75);
+  text("ROT >", w * 0.45, h * 0.75);
+  text("^ THRUST", w * 0.8, h * 0.75);
+  
+  pop();
 }
 
 // p5 js callback - draw the world
@@ -636,6 +812,8 @@ function draw() {
       textSize(10);
       text("safe for landing", (w / 2) - 100, 40);
     }
+    
+    draw_virtual_controls();
 
   } else {
     fill(444)
@@ -663,7 +841,7 @@ function draw() {
     }
 
     textSize(20)
-    text("press [enter] to start", (w / 2) - 160, h / 2 - 60)
+    text("press [enter] or tap to start", (w / 2) - 160, h / 2 - 60)
     text("use cursor keys and space to move", (w / 2) - 220, (h / 2) - 30)
     text("press [m] to toggle music", (w / 2) - 172, (h / 2))
     draw_landscape();
