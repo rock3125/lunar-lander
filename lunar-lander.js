@@ -746,8 +746,11 @@ function mouseClicked() {
 
 // Prevent default touch behavior
 function touchStarted() {
-  if (getAudioContext().state !== 'running') {
+  if (typeof getAudioContext !== 'undefined' && getAudioContext() && getAudioContext().state !== 'running') {
     getAudioContext().resume();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
   }
   // Allow music toggle via touch
   if (touches.length > 0) {
