@@ -603,35 +603,61 @@ let touch_right = false;
 let touch_thrust = false;
 let touch_start = false;
 
+let joystick_active = false;
+let joystick_base = { x: 0, y: 0 };
+let joystick_current = { x: 0, y: 0 };
+let joystick_touch_id = null;
+
 function update_touches() {
   touch_left = false;
   touch_right = false;
   touch_thrust = false;
   touch_start = false;
   
+  let active_joystick_found = false;
+  
   for (let i = 0; i < touches.length; i++) {
-    let tx = touches[i].x;
-    let ty = touches[i].y;
+    let t = touches[i];
+    let tx = t.x;
+    let ty = t.y;
     
     // Ignore touches on music button roughly
     if (tx > w - 80 && ty > h - 80) continue;
 
     if (game_state !== "running") {
       touch_start = true;
-    } else {
-      // Thrust: right side of the screen
-      if (tx > w * 0.6) {
-        touch_thrust = true;
-      }
-      // Rotate left: bottom left
-      else if (tx < w * 0.3) {
-        touch_left = true;
-      }
-      // Rotate right: bottom middle-left
-      else if (tx >= w * 0.3 && tx < w * 0.6) {
-        touch_right = true;
-      }
+      continue;
     }
+
+    if (!joystick_active) {
+      joystick_active = true;
+      joystick_touch_id = t.id;
+      joystick_base = { x: tx, y: ty };
+      joystick_current = { x: tx, y: ty };
+      active_joystick_found = true;
+      break;
+    } else if (joystick_touch_id === t.id || t.id === undefined) {
+      // t.id can be undefined in some browsers/versions, fallback to first touch
+      joystick_current = { x: tx, y: ty };
+      active_joystick_found = true;
+      break;
+    }
+  }
+
+  if (!active_joystick_found && joystick_active) {
+    joystick_active = false;
+  }
+
+  if (joystick_active) {
+    let dx = joystick_current.x - joystick_base.x;
+    let dy = joystick_current.y - joystick_base.y;
+
+    let deadzone = 25; // pixels before action registers
+
+    if (dx < -deadzone) touch_left = true;
+    if (dx > deadzone) touch_right = true;
+    // Up or down for thrust
+    if (dy < -deadzone || dy > deadzone) touch_thrust = true;
   }
 }
 
@@ -804,31 +830,36 @@ function draw_virtual_controls() {
   if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) return;
   if (game_state !== "running") return;
 
-  push();
-  noStroke();
-  
-  // Left area (Rotate Left)
-  fill(255, 255, 255, touch_left ? 60 : 30);
-  rectMode(CORNER);
-  rect(0, h * 0.5, w * 0.3, h * 0.5, 20);
-  
-  // Right area (Rotate Right)
-  fill(255, 255, 255, touch_right ? 60 : 30);
-  rect(w * 0.3, h * 0.5, w * 0.3, h * 0.5, 20);
-  
-  // Thrust area
-  fill(255, 255, 255, touch_thrust ? 60 : 30);
-  rect(w * 0.6, h * 0.5, w * 0.4, h * 0.5, 20);
+  if (joystick_active) {
+    push();
+    
+    // Draw base
+    strokeWeight(2);
+    stroke(255, 255, 255, 100);
+    fill(255, 255, 255, 50);
+    ellipse(joystick_base.x, joystick_base.y, 100, 100);
 
-  // Labels
-  fill(255, 255, 255, 150);
-  textAlign(CENTER, CENTER);
-  textSize(Math.min(w * 0.05, 30));
-  text("< ROT", w * 0.15, h * 0.75);
-  text("ROT >", w * 0.45, h * 0.75);
-  text("^ THRUST", w * 0.8, h * 0.75);
-  
-  pop();
+    // Draw stick
+    stroke(255, 255, 255, 200);
+    fill(255, 255, 255, 150);
+    // Limit stick drawing distance to avoid it flying off base
+    let dx = joystick_current.x - joystick_base.x;
+    let dy = joystick_current.y - joystick_base.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+    let max_dist = 50;
+    
+    let draw_x = joystick_current.x;
+    let draw_y = joystick_current.y;
+    
+    if (dist > max_dist) {
+      draw_x = joystick_base.x + (dx / dist) * max_dist;
+      draw_y = joystick_base.y + (dy / dist) * max_dist;
+    }
+    
+    ellipse(draw_x, draw_y, 40, 40);
+    
+    pop();
+  }
 }
 
 // p5 js callback - draw the world
