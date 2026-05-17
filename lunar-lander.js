@@ -245,16 +245,55 @@ function draw_stars() {
   }
 }
 
+function draw_speaker(x, y, scl, is_on) {
+  push();
+  translate(x, y);
+  scale(scl);
+  
+  fill(255);
+  noStroke();
+  beginShape();
+  vertex(-8, -5);
+  vertex(-2, -5);
+  vertex(6, -10);
+  vertex(6, 10);
+  vertex(-2, 5);
+  vertex(-8, 5);
+  endShape(CLOSE);
+
+  if (is_on) {
+    stroke(255);
+    strokeWeight(2);
+    noFill();
+    arc(10, 0, 10, 10, -45, 45);
+    arc(10, 0, 20, 20, -45, 45);
+  } else {
+    stroke(255, 50, 50);
+    strokeWeight(2);
+    line(10, -5, 20, 5);
+    line(20, -5, 10, 5);
+  }
+  pop();
+}
+
 function draw_music_control() {
-  stroke(20)
-  if (music_on)
-    fill(255)
-  else
-    fill(0)
-  rect(w - 30, h - 20, 10, 10, 10)
-  textSize(10)
-  fill(255)
-  text("music", w - 70, h - 18)
+  push();
+  // Draw a larger, touch-friendly area
+  fill(0, 0, 0, 150);
+  stroke(100);
+  strokeWeight(1);
+  rectMode(CENTER);
+  rect(w - 40, h - 40, 60, 60, 15);
+  
+  draw_speaker(w - 45, h - 40, 1.5, music_on);
+  
+  // label
+  fill(255);
+  noStroke();
+  textSize(10);
+  textAlign(CENTER, CENTER);
+  text("MUSIC", w - 40, h - 15);
+  pop();
 }
 
 // draw the game control panel showing where it is at
@@ -575,7 +614,7 @@ function update_touches() {
     let ty = touches[i].y;
     
     // Ignore touches on music button roughly
-    if (tx > w - 50 && ty > h - 50) continue;
+    if (tx > w - 80 && ty > h - 80) continue;
 
     if (game_state !== "running") {
       touch_start = true;
@@ -734,7 +773,7 @@ function toggle_music() {
 
 // music control on/off
 function mouseClicked() {
-  if (mouseX > w - 80 && mouseY > h - 40) {
+  if (mouseX > w - 80 && mouseY > h - 80) {
     toggle_music();
   }
 }
@@ -751,7 +790,7 @@ function touchStarted() {
   if (touches.length > 0) {
     let tx = touches[touches.length-1].x;
     let ty = touches[touches.length-1].y;
-    if (tx > w - 80 && ty > h - 40) {
+    if (tx > w - 80 && ty > h - 80) {
       toggle_music();
       return false;
     }
@@ -814,34 +853,72 @@ function draw() {
     draw_virtual_controls();
 
   } else {
-    fill(444)
-    textSize(20)
-    text("Rock's lunar lander v1.0", (w / 2) - 180, (h / 2) - 100)
-    fill(555)
+    push();
+    textAlign(CENTER, CENTER);
+    rectMode(CENTER);
 
-    textSize(30)
+    // Draw a dark semi-transparent panel
+    fill(0, 0, 0, 200);
+    stroke(0, 255, 100);
+    strokeWeight(2);
+    const panel_w = Math.min(w * 0.9, 600);
+    const panel_h = 400;
+    rect(w / 2, h / 2, panel_w, panel_h, 20);
+
+    // Title with neon glow
+    drawingContext.shadowBlur = 20;
+    drawingContext.shadowColor = '#00FF66';
+    fill(0, 255, 100);
+    noStroke();
+    textSize(Math.min(w * 0.08, 45));
+    text("L U N A R   L A N D E R", w / 2, (h / 2) - 120);
+
+    drawingContext.shadowBlur = 0;
+    fill(200);
+    textSize(16);
+    text("v1.0 by Rock", w / 2, (h / 2) - 80);
+
     if (game_state === "landed") {
-      text("CONGRATULATIONS", (w / 2) - 210, (h / 2) - 200)
-      text("you made it", (w / 2) - 150, (h / 2) - 160)
+      fill(50, 255, 50);
+      textSize(30);
+      text("CONGRATULATIONS", w / 2, (h / 2) - 20);
+      textSize(20);
+      text("You made it!", w / 2, (h / 2) + 15);
 
       if (high_score > previous_high_score) {
         set_cookie("high_score", "" + high_score, 7);
-        text("NEW HIGH SCORE", (w / 2) - 195, (h / 2) - 350)
+        fill(255, 200, 0);
+        drawingContext.shadowBlur = 10;
+        drawingContext.shadowColor = '#FFC800';
+        text("NEW HIGH SCORE!", w / 2, (h / 2) + 55);
+        drawingContext.shadowBlur = 0;
       }
 
       draw_lander();
       draw_control_panel();
 
     } else {
-
-      draw_explosion()
-      text("G A M E   O V E R", (w / 2) - 200, (h / 2) - 200)
+      draw_explosion();
+      if (explosion_counter >= 0) {
+        fill(255, 50, 50);
+        textSize(35);
+        text("G A M E   O V E R", w / 2, (h / 2) - 10);
+      }
     }
 
-    textSize(20)
-    text("press [enter] or tap to start", (w / 2) - 160, h / 2 - 60)
-    text("use cursor keys and space to move", (w / 2) - 220, (h / 2) - 30)
-    text("press [m] to toggle music", (w / 2) - 172, (h / 2))
+    fill(255);
+    textSize(22);
+    // Pulsing effect for "Start"
+    let alpha = 150 + 105 * Math.sin(frameCount * 5);
+    fill(255, 255, 255, alpha);
+    text("Press [ENTER] or Tap to Start", w / 2, (h / 2) + 100);
+    
+    fill(150);
+    textSize(14);
+    text("Controls: Cursor Keys & Space  |  Mobile: Virtual Joypad", w / 2, (h / 2) + 140);
+    text("Press [M] or use the button below to toggle music", w / 2, (h / 2) + 165);
+    
+    pop();
     stop_title_track();
   }
 
